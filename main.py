@@ -23,6 +23,7 @@ EXPLORER_DIFF = "https://explorer-api.pkt.ai/api/v1/PKT/pkt/chain/down/1"
 global db
 db = "database.json"
 exchdb = "exchdb.json"
+ssdb = "socialshare.json"
 chatintents = discord.Intents.all()
 bot = commands.Bot(command_prefix="pkt ", help_command=None, intents=chatintents, owner_id=859368295823835136)
 
@@ -217,6 +218,31 @@ async def exchangereq(user, address):
     with open(exchdb,'w') as f:
         json.dump(users,f, indent=4)
     return True
+
+async def get_ss():
+    with open(ssdb,'r') as f:
+        users = json.load(f)
+    return users
+
+async def del_ss():
+    with open(ssdb,'w') as f:
+        f.seek(0)
+        f.truncate()
+        data = {}
+        json.dump(data, f)
+    return
+
+async def ssreq(user, address, name):
+    users = await get_ss()
+    if str(user.name) in users:
+        return False
+    else:
+        users[str(user.name)] = {}
+        users[str(user.name)]["address"] = address
+        users[str(user.name)]["fullname"] = name
+    with open(ssdb,'w') as f:
+        json.dump(users,f, indent=4)
+    return True    
 
 async def sell_this(user,item_name,amount,price = None):
     item_name = item_name.lower()
@@ -997,6 +1023,66 @@ async def reportissue(interaction: discord.Interaction, issue_title: str, issue_
     embed.set_footer(text=f"Command invoked by {interaction.user.name} on {datetime.datetime.now()}")
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
+@bot.tree.command(name="socialshare", description="You can share your Pkt post or video URL and earn bot coins. (Available once in 2 days)")
+@app_commands.guild_only()
+@app_commands.checks.cooldown(1, 259200, key=lambda i: (i.user.id))
+@app_commands.describe(url = "Your Pkt post or video URL", fullname = "Your discord name with your # number")
+async def socialshare(interaction: discord.Interaction, url: str, fullname: str):
+    if url == None:
+        em = discord.Embed(title="Error!!", description="Please enter the URL", color=colors.red)
+        em.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
+        await interaction.response.send_message(embed=em, ephemeral=True)
+        return
+    if fullname == None:
+        emggg = discord.Embed(title="Error!!", description="Please enter your full discord name (not username) full name with the # number", color=colors.red)
+        emggg.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
+        await interaction.response.send_message(embed=emggg, ephemeral=True)
+        return
+    if not url.startswith('https://youtube.com/') or not url.startswith('https://twitter.com/') or not url.startswith('https://reddit.com/') or not url.startswith('https://instagram.com/') or not url.startswith('https://facebook.com/'):
+        emmm = discord.Embed(title="Error!!", description="Please enter a valid Pkt social address", color=colors.red)
+        emmm.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
+        await interaction.response.send_message(embed=emmm, ephemeral=True)
+        return
+    else:
+        await ssreq(interaction.user, address=url, name=fullname)
+        emm = discord.Embed(title="Social Share Status", description="You are added to the social share list. Shreyas and other admins will verify your social share request and hopefully you will get paid within **24 Hours** Thanks..", color=colors.green)
+        emm.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
+        await interaction.response.send_message(embed=emm, ephemeral=True)
+        return
+
+@bot.command()
+@commands.guild_only()
+async def socialsharelist(ctx: commands.Context):
+    if os.stat(ssdb).st_size == 0:
+        emb = discord.Embed(title="Social Share List", description="If you dont see your exchange application here, then you are most probably paid.. Paid user's application will be removed from the list however if you have earned again and you applied the form again then your application should be present here.. If you didnt get paid and your application is missing then you are probably rejected.", color=colors.gold)
+        emb.add_field(name="**This is in Debug mode**", value="It is quite empty here (no applications found)..")
+        emb.set_footer(text=f"Command invoked by {ctx.author.name} on {datetime.datetime.now()}") 
+    else:
+        users = await get_ss()
+        emb = discord.Embed(title="Social Share List", description="If you dont see your social share application here, then you are most probably paid.. Paid user's application will be removed from the list however if you have earned again and you applied the form again then your application should be present here.. If you didnt get paid and your application is missing then you are probably rejected.", color=colors.green)
+        emb.add_field(name="**This is in Debug mode**", value=f"``{users}``")
+        emb.set_footer(text=f"Command invoked by {ctx.author.name} on {datetime.datetime.now()}")
+    await ctx.send(embed=emb)
+
+@bot.command()
+@commands.guild_only()
+@commands.is_owner()
+@commands.has_role("Guides", "Mods")
+async def deletessdb(ctx: commands.Context):
+    try:
+        await del_ss()
+        await ctx.send("Deleted Applications from the database..")
+    except Exception as e:
+        await ctx.send(f"Failed to delete applications: {e}")
+
+@bot.command()
+@commands.guild_only()
+@commands.is_owner()
+@commands.has_role("Guides", "Mods")
+async def approvess(ctx: commands.Context, fullname):
+    await update_bank(fullname, 10, 'wallet')
+    await ctx.send(f"Approved @{fullname} he/she got 10 coins for his social share!")
+
 @bot.tree.command(name="help", description="Returns information regarding the commands")
 @app_commands.guild_only()
 async def help(interaction: discord.Interaction):
@@ -1029,8 +1115,7 @@ async def help(interaction: discord.Interaction):
     ``/weekly`` - Gives you random amount of coins (**Available once in 7 days**).
     ``/monthly`` - Gives you random amount of coins (**Available once in 30 days**).
     ``/rob <member>`` - Lets you rob some amount of mentioned person's balance.
-    ``/hunt`` - Lets you hunt an animal that you can sell for coins! (**Available once in 5 minutes**).
-    ``/fish`` - Lets you fish in a dirty pond so that you could get a tool and hunt (**Available once in 5 minutes**).""")
+    ``/socialshare <Your Pkt social share url>`` - You can share your Pkt post or video URL and earn bot coins. (**Available once in 2 days**)""")
     embed.add_field(name="Marketplace related commands", value="""
     ``/buy <item name> <amount of item>`` - Lets you buy items from the market using your bot coins.
     ``/sell <item name> <amount of item>`` - Sells the item from your inventory to the market.
@@ -1047,7 +1132,9 @@ async def help(interaction: discord.Interaction):
     ``pkt disconnect`` - Disconnects from the voice channel.""")
     embed.add_field(name="Administrator commands **NOT FOR GENERAL PUBLIC USE**", value="""
     ``pkt shutdown`` - Shuts down the bot completely in case of emergency. [**Shreyas-ITB only**]
-    ``pkt deletedb`` - Clears the payment history of the users. [**Shreyas-ITB only**]""")
+    ``pkt deletedb`` - Clears the payment history of the users. [**Shreyas-ITB only**]
+    ``pkt socialsharelist`` - Shows all the pending social share lists. [**Shreyas-ITB and admin/mods**]
+    ``pkt approvess <member name>`` - Approves the user's social share application and rewards him. [**Shreyas-ITB and admins/mods**]""")
     embed.set_footer(text=f"Command invoked by {interaction.user.name} on {datetime.datetime.now()}")
     await interaction.response.send_message(embed=embed)
 
