@@ -1078,7 +1078,7 @@ async def deletessdb(ctx: commands.Context):
 @bot.command()
 @commands.guild_only()
 @commands.is_owner()
-@commands.has_role("Guides", "Mods")
+@commands.has_role("Guides")
 async def approvess(ctx: commands.Context, fullname):
     await update_bank(fullname, 10, 'wallet')
     await ctx.send(f"Approved @{fullname} he/she got 10 coins for his social share!")
