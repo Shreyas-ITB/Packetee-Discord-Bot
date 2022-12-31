@@ -1037,11 +1037,6 @@ async def socialshare(interaction: discord.Interaction, url: str, fullname: str)
         emggg.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
         await interaction.response.send_message(embed=emggg, ephemeral=True)
         return
-#     if not url.startswith('https://youtube.com/') or not url.startswith('https://twitter.com/') or not url.startswith('https://reddit.com/') or not url.startswith('https://instagram.com/') or not url.startswith('https://facebook.com/'):
-#         emmm = discord.Embed(title="Error!!", description="Please enter a valid Pkt social address", color=colors.red)
-#         emmm.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
-#         await interaction.response.send_message(embed=emmm, ephemeral=True)
-#         return
     else:
         await ssreq(interaction.user, address=url, name=fullname)
         emm = discord.Embed(title="Social Share Status", description="You are added to the social share list. Shreyas and other admins will verify your social share request and hopefully you will get paid within **24 Hours** Thanks..", color=colors.green)
@@ -1066,8 +1061,6 @@ async def socialsharelist(ctx: commands.Context):
 @bot.command()
 @commands.guild_only()
 @commands.is_owner()
-@commands.has_role("Guides")
-@commands.has_role("Mods")
 async def deletessdb(ctx: commands.Context):
     try:
         await del_ss()
@@ -1078,11 +1071,20 @@ async def deletessdb(ctx: commands.Context):
 @bot.command()
 @commands.guild_only()
 @commands.is_owner()
-@commands.has_role("Guides")
-@commands.has_role("Mods")
-async def approvess(ctx: commands.Context, fullname):
-    await update_bank(fullname, 10, 'wallet')
-    await ctx.send(f"Approved @{fullname} he/she got 10 coins for his social share!")
+async def approvess(ctx: commands.Context, fullname: discord.Member = None):
+    if fullname == None:
+        emggg = discord.Embed(title="Error!!", description="Please enter your full discord name (not username) full name with the # number", color=colors.red)
+        emggg.set_footer(text=f"Command invoked by {ctx.author.name} on {datetime.datetime.now()}")
+        await ctx.send(embed=emggg, ephemeral=True)
+        return
+    try:
+        await update_bank(fullname, 10, 'wallet')
+        await ctx.send(f"Approved @{fullname} he/she got 10 coins for his social share!")
+    except KeyError:
+        emgggg = discord.Embed(title="Error!!", description="He has no botcoin account!! Please tell him to use ``/balance`` to open an account.", color=colors.red)
+        emgggg.set_footer(text=f"Command invoked by {ctx.author.name} on {datetime.datetime.now()}")
+        await ctx.send(embed=emgggg, ephemeral=True)
+        return
 
 @bot.tree.command(name="help", description="Returns information regarding the commands")
 @app_commands.guild_only()
