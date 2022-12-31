@@ -1025,7 +1025,6 @@ async def reportissue(interaction: discord.Interaction, issue_title: str, issue_
 
 @bot.tree.command(name="socialshare", description="You can share your Pkt post or video URL and earn bot coins. (Available once in 2 days)")
 @app_commands.guild_only()
-@app_commands.checks.cooldown(1, 259200, key=lambda i: (i.user.id))
 @app_commands.describe(url = "Your Pkt post or video URL", fullname = "Your discord name with your # number")
 async def socialshare(interaction: discord.Interaction, url: str, fullname: str):
     if url == None:
