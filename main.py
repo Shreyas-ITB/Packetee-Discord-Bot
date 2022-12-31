@@ -1037,11 +1037,11 @@ async def socialshare(interaction: discord.Interaction, url: str, fullname: str)
         emggg.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
         await interaction.response.send_message(embed=emggg, ephemeral=True)
         return
-    if not url.startswith('https://youtube.com/') or not url.startswith('https://twitter.com/') or not url.startswith('https://reddit.com/') or not url.startswith('https://instagram.com/') or not url.startswith('https://facebook.com/'):
-        emmm = discord.Embed(title="Error!!", description="Please enter a valid Pkt social address", color=colors.red)
-        emmm.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
-        await interaction.response.send_message(embed=emmm, ephemeral=True)
-        return
+#     if not url.startswith('https://youtube.com/') or not url.startswith('https://twitter.com/') or not url.startswith('https://reddit.com/') or not url.startswith('https://instagram.com/') or not url.startswith('https://facebook.com/'):
+#         emmm = discord.Embed(title="Error!!", description="Please enter a valid Pkt social address", color=colors.red)
+#         emmm.set_footer(text=f"Command invoked by {interaction.user} on {datetime.datetime.now()}")
+#         await interaction.response.send_message(embed=emmm, ephemeral=True)
+#         return
     else:
         await ssreq(interaction.user, address=url, name=fullname)
         emm = discord.Embed(title="Social Share Status", description="You are added to the social share list. Shreyas and other admins will verify your social share request and hopefully you will get paid within **24 Hours** Thanks..", color=colors.green)
